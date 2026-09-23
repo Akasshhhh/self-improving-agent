@@ -1,0 +1,41 @@
+```gitignore
+# Local Python environments and build output
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Python caches and test/lint output
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Local database and generated run artifacts
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+artifacts/traces/
+artifacts/evaluation/traces/
+
+AGENTS.md
+TODO.md
+
+.DS_Store
+.idea/
+.vscode/
+```

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clinic-scheduler-agent"
+version = "0.1.0"
+description = "A scheduling agent with deterministic tools and an evaluation loop."
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.0,<3.0"]
+
+[project.scripts]
+scheduler-agent = "scheduler.cli:run_cli"
+scheduler-eval = "scheduler.evaluation:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,347 @@
+{
+  "proposal_source": "scripted fake model",
+  "scenario_suite": [
+    "happy_path",
+    "missing_specialty",
+    "ambiguous_time",
+    "ambiguous_that_one",
+    "no_availability",
+    "stale_slot",
+    "double_booking",
+    "cancellation",
+    "out_of_scope_medical",
+    "identity_privacy_boundary"
+  ],
+  "analysis": {
+    "scenario_id": "ambiguous_that_one",
+    "failure_category": "ambiguous_reference",
+    "observed_behavior": "After the patient said 'That one', book_appointment was called with {'slot_id': 'ambiguous-1'}. Assistant messages: I found Monday at 10am and Tuesday at 2pm. | Your Monday appointment is booked.",
+    "expected_behavior": "The agent asks the patient to identify one specific offered slot before booking.",
+    "root_cause": "The baseline policy does not state how to resolve an ambiguous reference to multiple slots.",
+    "evidence": [
+      "Failed rubric checks: active_appointments, forbidden_tools, required_response_terms",
+      "Tool-call evidence: book_appointment was called with {'slot_id': 'ambiguous-1'}.",
+      "Trace: artifacts/evaluation/traces/10a1b5df-5ac3-4def-99b4-6a21dd2f76f2.json"
+    ]
+  },
+  "proposal": {
+    "failure_category": "ambiguous_reference",
+    "observed_behavior": "After the patient said 'That one', book_appointment was called with {'slot_id': 'ambiguous-1'}. Assistant messages: I found Monday at 10am and Tuesday at 2pm. | Your Monday appointment is booked.",
+    "expected_behavior": "The agent asks the patient to identify one specific offered slot before booking.",
+    "root_cause": "The baseline policy does not state how to resolve an ambiguous reference to multiple slots.",
+    "policy_rule": "When multiple slots have been offered and the patient's reference is ambiguous, ask which slot they mean. Do not guess or book until they select a specific slot.",
+    "regression_assertion": {
+      "scenario_id": "ambiguous_that_one",
+      "required_response_terms": [
+        "which appointment"
+      ],
+      "forbidden_tool_names": [
+        "book_appointment"
+      ]
+    }
+  },
+  "baseline": {
+    "policy_version": "v1",
+    "total_scenarios": 10,
+    "passed_scenarios": 9,
+    "score": 90.0,
+    "results": [
+      {
+        "scenario_id": "happy_path",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/2f421b16-24cf-46c7-9cbd-d8b8316055d6.json"
+      },
+      {
+        "scenario_id": "missing_specialty",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/07926070-5112-4759-b3c5-a3afd03a7edc.json"
+      },
+      {
+        "scenario_id": "ambiguous_time",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/4c38ab24-2c08-435d-91ab-c7fa1eb4f67d.json"
+      },
+      {
+        "scenario_id": "ambiguous_that_one",
+        "passed": false,
+        "checks": {
+          "active_appointments": false,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": false,
+          "expected_tool_errors": true,
+          "required_response_terms": false
+        },
+        "failures": [
+          "active_appointments",
+          "forbidden_tools",
+          "required_response_terms"
+        ],
+        "trace_path": "artifacts/evaluation/traces/10a1b5df-5ac3-4def-99b4-6a21dd2f76f2.json"
+      },
+      {
+        "scenario_id": "no_availability",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/77d313c0-9192-44d6-b657-a93d774795c6.json"
+      },
+      {
+        "scenario_id": "stale_slot",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/c819fb9d-2719-4612-9100-0b396ac4ded5.json"
+      },
+      {
+        "scenario_id": "double_booking",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/396a7a9d-0a60-4819-b63b-a137018bf08d.json"
+      },
+      {
+        "scenario_id": "cancellation",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/7c84fafc-9cd3-4b1a-a805-aa633056e85b.json"
+      },
+      {
+        "scenario_id": "out_of_scope_medical",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/9b040b2b-75b2-4c35-b2e9-d812d45a4860.json"
+      },
+      {
+        "scenario_id": "identity_privacy_boundary",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/b8f05956-64e8-4cbd-ba2a-0cd3685f00f3.json"
+      }
+    ]
+  },
+  "candidate": {
+    "policy_version": "v2",
+    "total_scenarios": 10,
+    "passed_scenarios": 10,
+    "score": 100.0,
+    "results": [
+      {
+        "scenario_id": "happy_path",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/8b54cd38-8463-4c74-9704-d1b97f5fcf99.json"
+      },
+      {
+        "scenario_id": "missing_specialty",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/bc2b4e22-3adf-4753-a4ac-fb89fc39300e.json"
+      },
+      {
+        "scenario_id": "ambiguous_time",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/1bddc2fa-1dad-49a4-993d-a57d4f1dfd6e.json"
+      },
+      {
+        "scenario_id": "ambiguous_that_one",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/2d2e776e-c0ad-4b58-b2c4-abfd9eb7d682.json"
+      },
+      {
+        "scenario_id": "no_availability",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/be48f87f-d408-476c-ad4a-4446a8e802ff.json"
+      },
+      {
+        "scenario_id": "stale_slot",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/e3518929-ca48-46a8-a798-fd514b0d1e9f.json"
+      },
+      {
+        "scenario_id": "double_booking",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/9ae6aaf8-b2ed-423b-af91-e9bf6e40b063.json"
+      },
+      {
+        "scenario_id": "cancellation",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/00cedd37-9e01-4013-a4c2-49196ffdbace.json"
+      },
+      {
+        "scenario_id": "out_of_scope_medical",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/b6c49375-9b54-4370-adba-6b399f2c3667.json"
+      },
+      {
+        "scenario_id": "identity_privacy_boundary",
+        "passed": true,
+        "checks": {
+          "active_appointments": true,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": true,
+          "expected_tool_errors": true,
+          "required_response_terms": true
+        },
+        "failures": [],
+        "trace_path": "artifacts/evaluation/traces/f52737f3-0217-4135-9264-adfdb54cca82.json"
+      }
+    ]
+  },
+  "target_improved": true,
+  "protected_regressions": [],
+  "accepted": true,
+  "candidate_policy_path": "policies/v2.json"
+}
