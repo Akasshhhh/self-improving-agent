@@ -1,8 +1,10 @@
 """Structured failure analysis and deterministic policy promotion gate."""
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -141,7 +143,21 @@ class ImprovementLoop:
             raise ValueError("The demo target must fail under the baseline policy.")
         analysis = self._analyze(target, target_result)
         proposal = self._proposer.propose(analysis, self._baseline_policy)
-        self._validate_proposal(proposal, analysis, target)
+        try:
+            self._validate_proposal(proposal, analysis, target)
+        except ValueError as error:
+            self._save_proposal_record(
+                analysis=analysis,
+                proposal=proposal,
+                status="rejected",
+                decision_reason=f"proposal_validation_failed: {error}",
+                baseline=baseline,
+                candidate_policy_version=None,
+                candidate_score=None,
+                target_improved=False,
+                protected_regressions=[],
+            )
+            raise
         candidate_policy = self._candidate_policy(proposal)
         candidate = self._harness.run(candidate_policy)
 
@@ -152,6 +168,26 @@ class ImprovementLoop:
         accepted = candidate_target.passed and not regressions
         if accepted:
             save_policy(candidate_policy, self._candidate_policy_path)
+
+        if accepted:
+            decision_reason = "target scenario passed and no previously passing scenarios regressed"
+        elif not candidate_target.passed and regressions:
+            decision_reason = "target scenario failed and protected scenarios regressed"
+        elif not candidate_target.passed:
+            decision_reason = "target scenario did not pass under the candidate policy"
+        else:
+            decision_reason = "candidate policy regressed previously passing scenarios"
+        proposal_record_path = self._save_proposal_record(
+            analysis=analysis,
+            proposal=proposal,
+            status="accepted" if accepted else "rejected",
+            decision_reason=decision_reason,
+            baseline=baseline,
+            candidate_policy_version=candidate_policy.version,
+            candidate_score=candidate.score,
+            target_improved=candidate_target.passed,
+            protected_regressions=regressions,
+        )
 
         report = {
             "proposal_source": self._proposal_source,
@@ -164,11 +200,51 @@ class ImprovementLoop:
             "protected_regressions": regressions,
             "accepted": accepted,
             "candidate_policy_path": str(self._candidate_policy_path) if accepted else None,
+            "proposal_record_path": str(proposal_record_path),
+            "decision_reason": decision_reason,
         }
         target_path = Path(report_path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         return report
+
+    def _save_proposal_record(
+        self,
+        *,
+        analysis: FailureAnalysis,
+        proposal: ImprovementProposal,
+        status: str,
+        decision_reason: str,
+        baseline: EvaluationReport,
+        candidate_policy_version: str | None,
+        candidate_score: float | None,
+        target_improved: bool,
+        protected_regressions: list[str],
+    ) -> Path:
+        """Persist a proposal and its promotion decision for later review."""
+        proposal_id = str(uuid4())
+        directory = self._candidate_policy_path.parent / "proposals"
+        target = directory / f"{proposal_id}.json"
+        record = {
+            "proposal_id": proposal_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "proposal_source": self._proposal_source,
+            "status": status,
+            "decision_reason": decision_reason,
+            "failure_analysis": analysis.model_dump(mode="json"),
+            "proposal": proposal.model_dump(mode="json"),
+            "baseline_policy_version": baseline.policy_version,
+            "baseline_score": baseline.score,
+            "candidate_policy_version": candidate_policy_version,
+            "candidate_score": candidate_score,
+            "target_improved": target_improved,
+            "protected_regressions": protected_regressions,
+        }
+        directory.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(target)
+        return target
 
     @staticmethod
     def _find_result(report: EvaluationReport, scenario_id: str) -> ScenarioResult:
@@ -226,9 +302,8 @@ class ImprovementLoop:
     ) -> None:
         if proposal.failure_category != analysis.failure_category:
             raise ValueError("Proposal failure category must match the observed failure.")
-        rule = proposal.policy_rule.lower()
-        if not all(marker in rule for marker in ("ambiguous", "ask which", "do not guess")):
-            raise ValueError("Proposal rule must explicitly address ambiguity, clarification, and guessing.")
+        # Do not judge policy prose by exact phrases. The candidate scenario run
+        # below is the behavioral check; this validator checks its evidence links.
         if proposal.regression_assertion.scenario_id != analysis.scenario_id:
             raise ValueError("Proposal regression assertion must reference the failed scenario.")
         if not set(target.required_response_terms).issubset(

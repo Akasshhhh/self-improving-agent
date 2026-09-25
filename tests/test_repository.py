@@ -2,12 +2,23 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from zoneinfo import ZoneInfo
 
 from scheduler.models import AppointmentStatus, Slot
 from scheduler.repository import SchedulingRepository, SlotUnavailable
 
 
 class SchedulingRepositoryTests(unittest.TestCase):
+    def test_creates_missing_parent_directory_for_database(self) -> None:
+        with TemporaryDirectory() as directory:
+            database_path = Path(directory) / "nested" / "data" / "scheduler.db"
+
+            repository = SchedulingRepository(database_path)
+            try:
+                self.assertTrue(database_path.exists())
+            finally:
+                repository.close()
+
     def setUp(self) -> None:
         self.temporary_directory = TemporaryDirectory()
         self.repository = SchedulingRepository(
@@ -56,6 +67,21 @@ class SchedulingRepositoryTests(unittest.TestCase):
 
         result = self.repository.list_available_slots(
             "cardiology", starts_before=self.slot.starts_at + timedelta(days=1)
+        )
+
+        self.assertEqual(result, [self.slot])
+
+    def test_available_slot_search_is_case_insensitive_for_specialty(self) -> None:
+        result = self.repository.list_available_slots("CARDIOLOGY")
+
+        self.assertEqual(result, [self.slot])
+
+    def test_available_slot_search_converts_local_time_bounds_before_comparing(self) -> None:
+        india_time = ZoneInfo("Asia/Kolkata")
+        result = self.repository.list_available_slots(
+            "cardiology",
+            starts_after=datetime(2026, 9, 28, 15, 15, tzinfo=india_time),
+            starts_before=datetime(2026, 9, 28, 16, 0, tzinfo=india_time),
         )
 
         self.assertEqual(result, [self.slot])

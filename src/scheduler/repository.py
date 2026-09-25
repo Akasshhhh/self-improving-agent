@@ -1,7 +1,7 @@
 """SQLite-backed scheduling operations that own all appointment side effects."""
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from collections.abc import Callable
 from uuid import uuid4
@@ -34,6 +34,8 @@ class SchedulingRepository:
         appointment_id_factory: Callable[[], str] = lambda: str(uuid4()),
     ) -> None:
         self._appointment_id_factory = appointment_id_factory
+        database_path = Path(database_path)
+        database_path.parent.mkdir(parents=True, exist_ok=True)
         self._connection = sqlite3.connect(database_path)
         self._connection.row_factory = sqlite3.Row
         self._connection.execute("PRAGMA foreign_keys = ON")
@@ -44,6 +46,12 @@ class SchedulingRepository:
 
     def has_slots(self) -> bool:
         return self._connection.execute("SELECT 1 FROM slots LIMIT 1").fetchone() is not None
+
+    def has_slot(self, slot_id: str) -> bool:
+        return (
+            self._connection.execute("SELECT 1 FROM slots WHERE id = ?", (slot_id,)).fetchone()
+            is not None
+        )
 
     def list_patient_appointments(self, patient_id: str) -> list[Appointment]:
         rows = self._connection.execute(
@@ -81,14 +89,14 @@ class SchedulingRepository:
         starts_after: datetime | None = None,
         starts_before: datetime | None = None,
     ) -> list[Slot]:
-        clauses = ["s.specialty = ?", "a.id IS NULL"]
+        clauses = ["s.specialty = ? COLLATE NOCASE", "a.id IS NULL"]
         values: list[str] = [specialty]
         if starts_after is not None:
             clauses.append("s.starts_at >= ?")
-            values.append(starts_after.isoformat())
+            values.append(self._as_utc_iso(starts_after))
         if starts_before is not None:
             clauses.append("s.starts_at < ?")
-            values.append(starts_before.isoformat())
+            values.append(self._as_utc_iso(starts_before))
 
         rows = self._connection.execute(
             f"""
@@ -207,3 +215,10 @@ class SchedulingRepository:
             clinician_name=row["clinician_name"],
             starts_at=datetime.fromisoformat(row["starts_at"]),
         )
+
+    @staticmethod
+    def _as_utc_iso(value: datetime) -> str:
+        """Normalize query bounds before comparing them with UTC database values."""
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).isoformat()

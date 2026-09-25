@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field
 
 from .agent import AgentTurnLimitError, SchedulingAgent
@@ -80,6 +81,8 @@ def load_scenarios(path: str | Path) -> list[Scenario]:
 
 
 def main() -> None:
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Run the scheduler evaluation and improvement loop.")
     parser.add_argument("--scenarios", default="scenarios/scheduling.json")
     parser.add_argument("--trace-dir", default="artifacts/evaluation/traces")

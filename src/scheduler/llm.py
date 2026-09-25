@@ -123,7 +123,11 @@ class OpenAIModelClient:
             with urlopen(request, timeout=self._timeout_seconds) as response:
                 body = json.loads(response.read())
         except HTTPError as error:
-            raise ModelClientError(f"Model API returned HTTP {error.code}.") from None
+            detail = self._http_error_detail(error)
+            message = f"Model API returned HTTP {error.code}"
+            if detail:
+                message = f"{message}: {detail}"
+            raise ModelClientError(message) from None
         except (URLError, TimeoutError):
             raise ModelClientError("Could not reach the configured model API.") from None
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -144,8 +148,34 @@ class OpenAIModelClient:
             raise ModelClientError("Model API response did not match the expected chat format.") from None
 
     @staticmethod
+    def _http_error_detail(error: HTTPError) -> str | None:
+        """Extract a short provider error summary without exposing request headers."""
+        try:
+            body = json.loads(error.read())
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+            return None
+        if not isinstance(body, dict) or not isinstance(body.get("error"), dict):
+            return None
+
+        provider_error = body["error"]
+        labels = [
+            str(provider_error[key])
+            for key in ("type", "code", "param")
+            if isinstance(provider_error.get(key), str) and provider_error[key]
+        ]
+        summary = ", ".join(labels)
+        provider_message = provider_error.get("message")
+        if isinstance(provider_message, str) and provider_message.strip():
+            message = " ".join(provider_message.split())[:300]
+            summary = f"{summary}: {message}" if summary else message
+        return summary or None
+
+    @staticmethod
     def _serialize_message(message: ChatMessage) -> dict[str, Any]:
         serialized = message.model_dump(mode="json", exclude_none=True)
+        # ChatMessage defaults tool_calls to []; providers require this field to
+        # be omitted unless an assistant message actually contains tool calls.
+        serialized.pop("tool_calls", None)
         if message.tool_calls:
             serialized["tool_calls"] = [
                 {
@@ -159,4 +189,3 @@ class OpenAIModelClient:
                 for call in message.tool_calls
             ]
         return serialized
-

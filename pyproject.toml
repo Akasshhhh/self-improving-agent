@@ -7,11 +7,17 @@ name = "clinic-scheduler-agent"
 version = "0.1.0"
 description = "A scheduling agent with deterministic tools and an evaluation loop."
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2.0,<3.0"]
+dependencies = [
+    "pydantic>=2.0,<3.0",
+    "python-dotenv>=1.0,<2.0",
+]
 
 [project.scripts]
 scheduler-agent = "scheduler.cli:run_cli"
 scheduler-eval = "scheduler.evaluation:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

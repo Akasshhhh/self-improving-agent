@@ -1,6 +1,6 @@
 """Validated, allow-listed tools exposed to the scheduling agent."""
 
-from datetime import datetime
+from datetime import datetime, timezone, tzinfo
 from enum import StrEnum
 from typing import Any
 
@@ -54,11 +54,17 @@ class ToolResult(BaseModel):
 class SchedulingTools:
     """Converts untrusted tool arguments into validated repository calls."""
 
-    def __init__(self, repository: SchedulingRepository, patient_id: str) -> None:
+    def __init__(
+        self,
+        repository: SchedulingRepository,
+        patient_id: str,
+        display_timezone: tzinfo = timezone.utc,
+    ) -> None:
         self._repository = repository
         if not patient_id.strip():
             raise ValueError("A trusted patient identity is required.")
         self._patient_id = patient_id
+        self._display_timezone = display_timezone
 
     def execute(self, tool_name: ToolName | str, arguments: dict[str, Any]) -> ToolResult:
         """Run one allow-listed tool and convert expected errors into safe output."""
@@ -152,10 +158,17 @@ class SchedulingTools:
             },
         ]
 
-    @staticmethod
-    def _serialize(model: Slot | Appointment) -> dict[str, Any]:
+    def _serialize(self, model: Slot | Appointment) -> dict[str, Any]:
         serialized = model.model_dump(mode="json")
-        if isinstance(model, Appointment):
+        if isinstance(model, Slot):
+            starts_at = model.starts_at
+            if starts_at.tzinfo is None:
+                starts_at = starts_at.replace(tzinfo=timezone.utc)
+            localized = starts_at.astimezone(self._display_timezone)
+            timezone_name = getattr(self._display_timezone, "key", None)
+            serialized["starts_at"] = localized.isoformat()
+            serialized["timezone"] = timezone_name or localized.tzname() or str(self._display_timezone)
+        else:
             serialized.pop("patient_id", None)
         return serialized
 

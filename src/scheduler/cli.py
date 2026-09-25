@@ -4,6 +4,9 @@ import argparse
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from dotenv import load_dotenv
 
 from .agent import AgentTurnLimitError, SchedulingAgent
 from .llm import ModelClientError, OpenAIModelClient
@@ -16,23 +19,33 @@ from .trace_store import TraceStore
 
 
 def _seed_demo_slots(repository: SchedulingRepository) -> None:
-    if repository.has_slots():
-        return
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    for index, (days, hour, specialty, clinician) in enumerate(
-        [
-            (2, 10, "cardiology", "Dr. Rivera"),
-            (2, 14, "cardiology", "Dr. Shah"),
-            (4, 11, "cardiology", "Dr. Rivera"),
-            (3, 9, "dermatology", "Dr. Chen"),
-            (6, 15, "dermatology", "Dr. Chen"),
-        ],
-        start=1,
-    ):
+    demo_slots = [
+        ("demo-slot-1", 2, 10, "cardiology", "Dr. Rivera"),
+        ("demo-slot-2", 2, 14, "cardiology", "Dr. Shah"),
+        ("demo-slot-3", 4, 11, "cardiology", "Dr. Rivera"),
+        ("demo-slot-4", 3, 9, "dermatology", "Dr. Chen"),
+        ("demo-slot-5", 6, 15, "dermatology", "Dr. Chen"),
+        ("demo-urgent-care-1", 1, 9, "urgent care", "Urgent Care Team"),
+        ("demo-urgent-care-2", 2, 13, "urgent care", "Urgent Care Team"),
+        ("demo-urgent-care-3", 3, 10, "urgent care", "Urgent Care Team"),
+        ("demo-primary-care-1", 1, 11, "primary care", "Dr. Patel"),
+        ("demo-primary-care-2", 3, 15, "primary care", "Dr. Patel"),
+        ("demo-primary-care-3", 5, 10, "primary care", "Dr. Morgan"),
+        ("demo-pediatrics-1", 2, 9, "pediatrics", "Dr. Brooks"),
+        ("demo-pediatrics-2", 5, 14, "pediatrics", "Dr. Brooks"),
+        ("demo-orthopedics-1", 4, 10, "orthopedics", "Dr. Kim"),
+        ("demo-orthopedics-2", 8, 13, "orthopedics", "Dr. Kim"),
+        ("demo-gastroenterology-1", 3, 11, "gastroenterology", "Dr. Singh"),
+        ("demo-gastroenterology-2", 7, 14, "gastroenterology", "Dr. Singh"),
+    ]
+    for slot_id, days, hour, specialty, clinician in demo_slots:
+        if repository.has_slot(slot_id):
+            continue
         starts_at = (now + timedelta(days=days)).replace(hour=hour)
         repository.create_slot(
             Slot(
-                id=f"demo-slot-{index}",
+                id=slot_id,
                 specialty=specialty,
                 clinician_name=clinician,
                 starts_at=starts_at,
@@ -41,22 +54,41 @@ def _seed_demo_slots(repository: SchedulingRepository) -> None:
 
 
 def run_cli() -> None:
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Chat with the clinic scheduling agent.")
     parser.add_argument("--patient-id", default="demo-patient", help="Trusted demo session identity")
     parser.add_argument("--database", default="data/scheduler.db")
     parser.add_argument("--trace-dir", default="artifacts/traces")
     parser.add_argument("--policy", default="policies/v1.json")
     parser.add_argument("--model", default=os.environ.get("OPENAI_MODEL"))
+    parser.add_argument(
+        "--timezone",
+        default=os.environ.get("SCHEDULER_TIMEZONE"),
+        help="IANA timezone for displayed appointment times (defaults to this computer's local timezone)",
+    )
     args = parser.parse_args()
     if not args.model:
         parser.error("provide --model or set OPENAI_MODEL for your OpenAI-compatible endpoint")
+    try:
+        display_timezone = (
+            ZoneInfo(args.timezone)
+            if args.timezone
+            else datetime.now().astimezone().tzinfo or timezone.utc
+        )
+    except ZoneInfoNotFoundError:
+        parser.error(f"unknown timezone '{args.timezone}'; use an IANA timezone such as Asia/Kolkata")
 
     repository = SchedulingRepository(args.database)
     try:
         _seed_demo_slots(repository)
         policy = load_policy(args.policy)
         model_client = OpenAIModelClient()
-        tools = SchedulingTools(repository, patient_id=args.patient_id)
+        tools = SchedulingTools(
+            repository,
+            patient_id=args.patient_id,
+            display_timezone=display_timezone,
+        )
         agent = SchedulingAgent(
             model_client=model_client,
             tools=tools,

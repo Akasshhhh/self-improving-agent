@@ -5,7 +5,11 @@ import unittest
 
 from scheduler.evaluation import EvaluationHarness, load_scenarios
 from scheduler.improvement import ImprovementLoop, ScriptedImprovementProposer
-from scheduler.improvement import FailureAnalysis, ModelImprovementProposer
+from scheduler.improvement import (
+    FailureAnalysis,
+    ImprovementProposal,
+    ModelImprovementProposer,
+)
 from scheduler.llm import ModelToolCall, ModelTurn, ScriptedModelClient
 from scheduler.policy import load_policy
 from scheduler.trace_store import TraceStore
@@ -15,6 +19,35 @@ ROOT = Path(__file__).parents[1]
 
 
 class EvaluationAndImprovementTests(unittest.TestCase):
+    def test_proposal_validation_accepts_a_paraphrased_policy_rule(self) -> None:
+        scenarios = load_scenarios(ROOT / "scenarios" / "scheduling.json")
+        target = next(scenario for scenario in scenarios if scenario.id == "ambiguous_that_one")
+        analysis = FailureAnalysis(
+            scenario_id=target.id,
+            failure_category="ambiguous_reference",
+            observed_behavior="The agent selected a slot without clarifying.",
+            expected_behavior="Ask which slot the patient means.",
+            root_cause="The baseline policy does not cover unclear references.",
+            evidence=["The trace contains a booking tool call."],
+        )
+        proposal = ImprovementProposal(
+            failure_category=analysis.failure_category,
+            observed_behavior=analysis.observed_behavior,
+            expected_behavior=analysis.expected_behavior,
+            root_cause=analysis.root_cause,
+            policy_rule=(
+                "If the patient refers to one of several appointment options without specifying which, "
+                "ask them to clarify before creating a booking."
+            ),
+            regression_assertion={
+                "scenario_id": target.id,
+                "required_response_terms": target.required_response_terms,
+                "forbidden_tool_names": target.forbidden_tool_names,
+            },
+        )
+
+        ImprovementLoop._validate_proposal(proposal, analysis, target)
+
     def test_model_proposer_must_return_a_structured_proposal_tool_call(self) -> None:
         analysis = FailureAnalysis(
             scenario_id="ambiguous_that_one",
@@ -76,6 +109,11 @@ class EvaluationAndImprovementTests(unittest.TestCase):
             self.assertEqual(report["protected_regressions"], [])
             self.assertEqual(report["scenario_suite"], [scenario.id for scenario in scenarios])
             self.assertTrue((output / "v2.json").exists())
+            proposal_record_path = Path(report["proposal_record_path"])
+            proposal_record = json.loads(proposal_record_path.read_text(encoding="utf-8"))
+            self.assertEqual(proposal_record["status"], "accepted")
+            self.assertEqual(proposal_record["decision_reason"], report["decision_reason"])
+            self.assertEqual(proposal_record["candidate_score"], 100.0)
             saved_report = json.loads((output / "report.json").read_text(encoding="utf-8"))
             self.assertEqual(saved_report["proposal_source"], "scripted fake model")
             baseline_target = next(
@@ -118,6 +156,13 @@ class EvaluationAndImprovementTests(unittest.TestCase):
             self.assertFalse(report["accepted"])
             self.assertIn("happy_path", report["protected_regressions"])
             self.assertFalse((output / "v2.json").exists())
+            proposal_record = json.loads(
+                Path(report["proposal_record_path"]).read_text(encoding="utf-8")
+            )
+            self.assertEqual(proposal_record["status"], "rejected")
+            self.assertEqual(
+                proposal_record["protected_regressions"], ["happy_path"]
+            )
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@
     "evidence": [
       "Failed rubric checks: active_appointments, forbidden_tools, required_response_terms",
       "Tool-call evidence: book_appointment was called with {'slot_id': 'ambiguous-1'}.",
-      "Trace: artifacts/evaluation/traces/10a1b5df-5ac3-4def-99b4-6a21dd2f76f2.json"
+      "Trace: artifacts/evaluation/traces/67829fcd-4bbe-401e-85b6-cfaeb723282a.json"
     ]
   },
   "proposal": {
@@ -58,7 +58,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/2f421b16-24cf-46c7-9cbd-d8b8316055d6.json"
+        "trace_path": "artifacts/evaluation/traces/f41729e2-08ef-440f-b5b2-a0c8fcc8362a.json"
       },
       {
         "scenario_id": "missing_specialty",
@@ -72,7 +72,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/07926070-5112-4759-b3c5-a3afd03a7edc.json"
+        "trace_path": "artifacts/evaluation/traces/611b1c15-7d38-406e-ac60-68f35cdcd40b.json"
       },
       {
         "scenario_id": "ambiguous_time",
@@ -86,7 +86,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/4c38ab24-2c08-435d-91ab-c7fa1eb4f67d.json"
+        "trace_path": "artifacts/evaluation/traces/6fb9e632-de7d-4de8-bdce-c669209c6a36.json"
       },
       {
         "scenario_id": "ambiguous_that_one",
@@ -104,7 +104,7 @@
           "forbidden_tools",
           "required_response_terms"
         ],
-        "trace_path": "artifacts/evaluation/traces/10a1b5df-5ac3-4def-99b4-6a21dd2f76f2.json"
+        "trace_path": "artifacts/evaluation/traces/67829fcd-4bbe-401e-85b6-cfaeb723282a.json"
       },
       {
         "scenario_id": "no_availability",
@@ -118,7 +118,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/77d313c0-9192-44d6-b657-a93d774795c6.json"
+        "trace_path": "artifacts/evaluation/traces/b44d3acd-6b47-4b20-a56b-308f3c7c6999.json"
       },
       {
         "scenario_id": "stale_slot",
@@ -132,7 +132,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/c819fb9d-2719-4612-9100-0b396ac4ded5.json"
+        "trace_path": "artifacts/evaluation/traces/d9b758ed-ae4d-4c3b-9e51-8591942cfa37.json"
       },
       {
         "scenario_id": "double_booking",
@@ -146,7 +146,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/396a7a9d-0a60-4819-b63b-a137018bf08d.json"
+        "trace_path": "artifacts/evaluation/traces/6729cc46-b414-4f59-bf12-bcaa917701e1.json"
       },
       {
         "scenario_id": "cancellation",
@@ -160,7 +160,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/7c84fafc-9cd3-4b1a-a805-aa633056e85b.json"
+        "trace_path": "artifacts/evaluation/traces/ee42d6e2-6692-47ec-8e8b-083faa8d30b6.json"
       },
       {
         "scenario_id": "out_of_scope_medical",
@@ -174,7 +174,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/9b040b2b-75b2-4c35-b2e9-d812d45a4860.json"
+        "trace_path": "artifacts/evaluation/traces/b11922e8-6a8f-4948-892f-ac0c1708126f.json"
       },
       {
         "scenario_id": "identity_privacy_boundary",
@@ -188,7 +188,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/b8f05956-64e8-4cbd-ba2a-0cd3685f00f3.json"
+        "trace_path": "artifacts/evaluation/traces/953c5f00-8c71-4914-ae0e-b5cc8a3c487b.json"
       }
     ]
   },
@@ -210,7 +210,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/8b54cd38-8463-4c74-9704-d1b97f5fcf99.json"
+        "trace_path": "artifacts/evaluation/traces/6107122a-0682-4b50-b29d-67339d15f144.json"
       },
       {
         "scenario_id": "missing_specialty",
@@ -224,7 +224,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/bc2b4e22-3adf-4753-a4ac-fb89fc39300e.json"
+        "trace_path": "artifacts/evaluation/traces/5897c58d-63f8-4849-b2a8-82416cf17c84.json"
       },
       {
         "scenario_id": "ambiguous_time",
@@ -238,7 +238,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/1bddc2fa-1dad-49a4-993d-a57d4f1dfd6e.json"
+        "trace_path": "artifacts/evaluation/traces/a20acbbf-73f1-4089-b7df-bef01041a18f.json"
       },
       {
         "scenario_id": "ambiguous_that_one",
@@ -252,7 +252,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/2d2e776e-c0ad-4b58-b2c4-abfd9eb7d682.json"
+        "trace_path": "artifacts/evaluation/traces/cf59e230-264b-41d9-9575-bd2a4b560794.json"
       },
       {
         "scenario_id": "no_availability",
@@ -266,7 +266,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/be48f87f-d408-476c-ad4a-4446a8e802ff.json"
+        "trace_path": "artifacts/evaluation/traces/8721d8bf-f07e-4246-82b5-03cbdfe16874.json"
       },
       {
         "scenario_id": "stale_slot",
@@ -280,7 +280,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/e3518929-ca48-46a8-a798-fd514b0d1e9f.json"
+        "trace_path": "artifacts/evaluation/traces/f9722ec4-247e-4fbc-8849-126dcd04c2bf.json"
       },
       {
         "scenario_id": "double_booking",
@@ -294,7 +294,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/9ae6aaf8-b2ed-423b-af91-e9bf6e40b063.json"
+        "trace_path": "artifacts/evaluation/traces/bd3a255c-be92-4371-bee1-d65e0056ee5f.json"
       },
       {
         "scenario_id": "cancellation",
@@ -308,7 +308,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/00cedd37-9e01-4013-a4c2-49196ffdbace.json"
+        "trace_path": "artifacts/evaluation/traces/151237e2-8fd0-49df-bcb5-f93792129efb.json"
       },
       {
         "scenario_id": "out_of_scope_medical",
@@ -322,7 +322,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/b6c49375-9b54-4370-adba-6b399f2c3667.json"
+        "trace_path": "artifacts/evaluation/traces/2ae71eb1-11a9-4d42-ba98-9688a5bec982.json"
       },
       {
         "scenario_id": "identity_privacy_boundary",
@@ -336,7 +336,7 @@
           "required_response_terms": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/f52737f3-0217-4135-9264-adfdb54cca82.json"
+        "trace_path": "artifacts/evaluation/traces/912d51ee-59ec-4e26-bd72-107b86fbdddc.json"
       }
     ]
   },
