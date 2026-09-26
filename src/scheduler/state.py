@@ -36,6 +36,7 @@ class SchedulingContext(BaseModel):
     patient_id: str = Field(min_length=1)
     specialty: str | None = None
     offered_slot_ids: list[str] = Field(default_factory=list)
+    pending_booking_slot_id: str | None = None
 
 
 class ConversationState(BaseModel):
@@ -94,11 +95,30 @@ class ConversationRun:
             {
                 "tool_name": result.tool_name,
                 "tool_call_id": tool_call_id,
+                "origin": "model",
                 "arguments": arguments or {},
                 "result": result.model_dump(mode="json"),
             },
         )
         return message
+
+    def record_dispatcher_tool_result(
+        self,
+        result: ToolResult,
+        *,
+        arguments: dict[str, Any],
+    ) -> None:
+        """Trace an application action without inventing a model tool-call message."""
+        self.trace.append(
+            TraceEventType.TOOL_EXECUTION,
+            {
+                "tool_name": result.tool_name,
+                "tool_call_id": None,
+                "origin": "dispatcher",
+                "arguments": arguments,
+                "result": result.model_dump(mode="json"),
+            },
+        )
 
     def update_context(
         self,
@@ -116,13 +136,26 @@ class ConversationRun:
         if update:
             self.trace.append(TraceEventType.STATE_UPDATE, update)
 
+    def set_pending_booking_slot(self, slot_id: str | None) -> None:
+        """Record the only slot a later patient confirmation may authorize."""
+        self.state.context.pending_booking_slot_id = slot_id
+        self.trace.append(
+            TraceEventType.STATE_UPDATE, {"pending_booking_slot_id": slot_id}
+        )
+
     def record_agent_error(self, message: str) -> None:
         self.trace.append(TraceEventType.AGENT_ERROR, {"message": message})
 
-    def trace_document(self, final_appointment_state: list[dict[str, Any]]) -> dict[str, Any]:
+    def trace_document(
+        self,
+        final_appointment_state: list[dict[str, Any]],
+        starting_state: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         document = self.trace.as_dict()
         document["messages"] = [message.model_dump(mode="json") for message in self.state.messages]
         document["final_appointment_state"] = final_appointment_state
+        if starting_state is not None:
+            document["starting_state"] = starting_state
         return document
 
     def _record_message(

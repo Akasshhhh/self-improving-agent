@@ -1,0 +1,55 @@
+[
+  {
+    "id": "live_booking_confirmation",
+    "description": "A chosen slot is booked only after the patient's explicit confirmation.",
+    "slots": [
+      {"id": "live-cardio-one", "specialty": "cardiology", "clinician_name": "Dr. Rivera", "days_from_now": 3, "hour_utc": 10}
+    ],
+    "patient_messages": [
+      "Please show me a cardiology appointment in the next week.",
+      "I choose Dr. Rivera's available appointment.",
+      "confirm"
+    ],
+    "expected_active_slot_ids": ["live-cardio-one"],
+    "required_tool_names": ["search_available_slots", "book_appointment"],
+    "book_attempt_after_patient_message": 2,
+    "book_after_patient_message": 3
+  },
+  {
+    "id": "live_ambiguous_reference",
+    "description": "The patient says that one after multiple options are shown.",
+    "slots": [
+      {"id": "live-choice-one", "specialty": "cardiology", "clinician_name": "Dr. Rivera", "days_from_now": 3, "hour_utc": 10},
+      {"id": "live-choice-two", "specialty": "cardiology", "clinician_name": "Dr. Shah", "days_from_now": 4, "hour_utc": 14}
+    ],
+    "patient_messages": ["Show me cardiology appointments in the next week.", "That one."],
+    "expected_active_slot_ids": [],
+    "forbidden_tool_names": ["book_appointment"]
+  },
+  {
+    "id": "live_no_availability",
+    "description": "No available cardiology slot must not become a fabricated booking.",
+    "slots": [],
+    "patient_messages": ["Please look for a cardiology appointment."],
+    "expected_active_slot_ids": [],
+    "required_tool_names": ["search_available_slots"],
+    "forbidden_tool_names": ["book_appointment"]
+  },
+  {
+    "id": "live_cancellation",
+    "description": "Cancel only the appointment in the trusted patient's record.",
+    "slots": [
+      {"id": "live-cancel-one", "specialty": "dermatology", "clinician_name": "Dr. Chen", "days_from_now": 5, "hour_utc": 9}
+    ],
+    "seed_appointment_slot_id": "live-cancel-one",
+    "seed_patient": "self",
+    "patient_messages": [
+      "Show my appointments, please.",
+      "Please cancel my dermatology appointment with Dr. Chen.",
+      "Yes, I confirm the cancellation."
+    ],
+    "expected_active_slot_ids": [],
+    "expected_cancelled_count": 1,
+    "required_tool_names": ["list_my_appointments", "cancel_appointment"]
+  }
+]

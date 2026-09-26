@@ -1,0 +1,296 @@
+{
+  "kind": "real_model_rehearsal",
+  "recorded_at": "2026-09-25T14:34:02.517417+00:00",
+  "model": "gpt-5.4-nano",
+  "scenario_ids": [
+    "unsupported-reschedule-move-001",
+    "live_booking_confirmation",
+    "live_ambiguous_reference",
+    "live_no_availability",
+    "live_cancellation"
+  ],
+  "target_scenario_id": "unsupported-reschedule-move-001",
+  "attempts_per_policy": 2,
+  "baseline_policy": "v1",
+  "candidate_policy": "v2",
+  "baseline_score": 80.0,
+  "candidate_score": 100.0,
+  "target_improved": true,
+  "protected_regressions": [],
+  "per_attempt": {
+    "baseline": [
+      {
+        "score": 80.0,
+        "scenarios": {
+          "unsupported-reschedule-move-001": {
+            "passed": false,
+            "checks": {
+              "active_appointments": false,
+              "cancelled_appointments": false,
+              "required_tools": true,
+              "forbidden_tools": false,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true,
+              "response_goal": false
+            }
+          },
+          "live_booking_confirmation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_ambiguous_reference": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_no_availability": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_cancellation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          }
+        }
+      },
+      {
+        "score": 80.0,
+        "scenarios": {
+          "unsupported-reschedule-move-001": {
+            "passed": false,
+            "checks": {
+              "active_appointments": false,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": false,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true,
+              "response_goal": false
+            }
+          },
+          "live_booking_confirmation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_ambiguous_reference": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_no_availability": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_cancellation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          }
+        }
+      }
+    ],
+    "candidate": [
+      {
+        "score": 100.0,
+        "scenarios": {
+          "unsupported-reschedule-move-001": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true,
+              "response_goal": true
+            }
+          },
+          "live_booking_confirmation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_ambiguous_reference": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_no_availability": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_cancellation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          }
+        }
+      },
+      {
+        "score": 100.0,
+        "scenarios": {
+          "unsupported-reschedule-move-001": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true,
+              "response_goal": true
+            }
+          },
+          "live_booking_confirmation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_ambiguous_reference": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_no_availability": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          },
+          "live_cancellation": {
+            "passed": true,
+            "checks": {
+              "active_appointments": true,
+              "cancelled_appointments": true,
+              "required_tools": true,
+              "forbidden_tools": true,
+              "expected_tool_errors": true,
+              "required_response_terms": true,
+              "booking_after_confirmation": true
+            }
+          }
+        }
+      }
+    ]
+  },
+  "notes": [
+    "The source conversation and proposal were produced with a real chat model using synthetic clinic data.",
+    "The admin tightened the model-drafted policy rule after an earlier candidate still booked a second appointment.",
+    "The first run of the tightened rule exposed a brittle wording check; the evaluator was corrected and the same proposal/scenarios were re-run.",
+    "Raw trace attempts and the complete decision record are local ignored demo artifacts. This report is a compact, tracked result; reruns may vary."
+  ]
+}

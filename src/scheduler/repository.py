@@ -44,14 +44,47 @@ class SchedulingRepository:
     def close(self) -> None:
         self._connection.close()
 
-    def has_slots(self) -> bool:
-        return self._connection.execute("SELECT 1 FROM slots LIMIT 1").fetchone() is not None
-
     def has_slot(self, slot_id: str) -> bool:
         return (
             self._connection.execute("SELECT 1 FROM slots WHERE id = ?", (slot_id,)).fetchone()
             is not None
         )
+
+    def evaluation_snapshot(self, patient_id: str) -> dict[str, object]:
+        """Capture bounded replay evidence without exposing other patient identities."""
+        slot_rows = self._connection.execute(
+            "SELECT id, specialty, clinician_name, starts_at FROM slots ORDER BY starts_at LIMIT 41"
+        ).fetchall()
+        appointment_rows = self._connection.execute(
+            """
+            SELECT id, slot_id, status FROM appointments
+            WHERE patient_id = ? ORDER BY created_at LIMIT 21
+            """,
+            (patient_id,),
+        ).fetchall()
+        occupied_rows = self._connection.execute(
+            """
+            SELECT slot_id FROM appointments WHERE status = ? ORDER BY slot_id LIMIT 41
+            """,
+            (AppointmentStatus.BOOKED.value,),
+        ).fetchall()
+        return {
+            "slots": [self._slot_from_row(row).model_dump(mode="json") for row in slot_rows[:40]],
+            "patient_appointments": [dict(row) for row in appointment_rows[:20]],
+            "occupied_slot_ids": [row["slot_id"] for row in occupied_rows[:40]],
+            "truncated": any(len(rows) > limit for rows, limit in (
+                (slot_rows, 40), (appointment_rows, 20), (occupied_rows, 40)
+            )),
+        }
+
+    def get_slot(self, slot_id: str) -> Slot:
+        row = self._connection.execute(
+            "SELECT id, specialty, clinician_name, starts_at FROM slots WHERE id = ?",
+            (slot_id,),
+        ).fetchone()
+        if row is None:
+            raise SlotNotFound(f"Slot '{slot_id}' does not exist.")
+        return self._slot_from_row(row)
 
     def list_patient_appointments(self, patient_id: str) -> list[Appointment]:
         rows = self._connection.execute(

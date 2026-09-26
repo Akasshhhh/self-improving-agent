@@ -15,6 +15,8 @@ dependencies = [
 [project.scripts]
 scheduler-agent = "scheduler.cli:run_cli"
 scheduler-eval = "scheduler.evaluation:main"
+scheduler-admin = "scheduler.admin:main"
+scheduler-demo = "scheduler.demo:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

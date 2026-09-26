@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .models import Appointment, Slot
+from .models import Appointment, AppointmentStatus, Slot
 from .repository import AppointmentNotFound, SchedulingError, SchedulingRepository, SlotNotFound, SlotUnavailable
 
 
@@ -66,7 +66,13 @@ class SchedulingTools:
         self._patient_id = patient_id
         self._display_timezone = display_timezone
 
-    def execute(self, tool_name: ToolName | str, arguments: dict[str, Any]) -> ToolResult:
+    def execute(
+        self,
+        tool_name: ToolName | str,
+        arguments: dict[str, Any],
+        *,
+        confirmed_booking_slot_id: str | None = None,
+    ) -> ToolResult:
         """Run one allow-listed tool and convert expected errors into safe output."""
         try:
             name = ToolName(tool_name)
@@ -81,15 +87,35 @@ class SchedulingTools:
 
             if name is ToolName.BOOK_APPOINTMENT:
                 request = BookAppointmentInput.model_validate(arguments)
+                if request.slot_id != confirmed_booking_slot_id:
+                    return self._failure(
+                        name, "confirmation_required",
+                        "This exact slot needs patient confirmation before booking.",
+                    )
                 appointment = self._repository.book_slot(self._patient_id, request.slot_id)
                 return self._success(name, {"appointment": self._serialize(appointment)})
 
             if name is ToolName.LIST_MY_APPOINTMENTS:
                 ListMyAppointmentsInput.model_validate(arguments)
                 appointments = self._repository.list_patient_appointments(self._patient_id)
+                now = datetime.now(timezone.utc)
+                details = []
+                for appointment in appointments:
+                    slot = self._repository.get_slot(appointment.slot_id)
+                    starts_at = slot.starts_at
+                    if starts_at.tzinfo is None:
+                        starts_at = starts_at.replace(tzinfo=timezone.utc)
+                    record = self._serialize(appointment)
+                    # Creation time is not the appointment time; supply the linked slot instead.
+                    record.pop("created_at", None)
+                    record["slot"] = self._serialize(slot)
+                    record["is_upcoming"] = (
+                        appointment.status is AppointmentStatus.BOOKED and starts_at > now
+                    )
+                    details.append(record)
                 return self._success(
                     name,
-                    {"appointments": [self._serialize(item) for item in appointments]},
+                    {"appointments": details},
                 )
 
             request = CancelAppointmentInput.model_validate(arguments)
@@ -120,6 +146,22 @@ class SchedulingTools:
         except SchedulingError as error:
             return self._failure(tool_name, "scheduling_error", str(error))
 
+    def preview_booking(self, arguments: dict[str, Any]) -> ToolResult:
+        """Validate a proposed slot without creating an appointment."""
+        try:
+            request = BookAppointmentInput.model_validate(arguments)
+            slot = self._repository.get_slot(request.slot_id)
+            available = self._repository.list_available_slots(slot.specialty)
+            if not any(item.id == slot.id for item in available):
+                raise SlotUnavailable(f"Slot '{slot.id}' is no longer available.")
+            return self._success(ToolName.BOOK_APPOINTMENT, {"slot": self._serialize(slot)})
+        except ValidationError as error:
+            return self._failure(ToolName.BOOK_APPOINTMENT, "invalid_arguments", error.errors()[0]["msg"])
+        except SlotNotFound as error:
+            return self._failure(ToolName.BOOK_APPOINTMENT, "slot_not_found", str(error))
+        except SlotUnavailable as error:
+            return self._failure(ToolName.BOOK_APPOINTMENT, "slot_unavailable", str(error))
+
     @staticmethod
     def schemas() -> list[dict[str, Any]]:
         """Return schemas suitable for registering these tools with an LLM provider."""
@@ -144,7 +186,11 @@ class SchedulingTools:
                 "type": "function",
                 "function": {
                     "name": ToolName.BOOK_APPOINTMENT.value,
-                    "description": "Book one available slot selected by the patient.",
+                    "description": (
+                        "Start a booking for an offered slot. The application asks for confirmation "
+                        "before making any booking. After the patient confirms, the application "
+                        "completes the booking without another model tool call."
+                    ),
                     "parameters": BookAppointmentInput.model_json_schema(),
                 },
             },

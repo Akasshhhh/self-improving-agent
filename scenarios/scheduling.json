@@ -7,18 +7,19 @@
       {"id": "happy-1", "specialty": "cardiology", "clinician_name": "Dr. Rivera", "starts_at": "2026-09-28T10:00:00Z"},
       {"id": "happy-2", "specialty": "cardiology", "clinician_name": "Dr. Rivera", "starts_at": "2026-09-29T14:00:00Z"}
     ],
-    "patient_messages": ["I need a cardiology appointment next week.", "Monday at 10 works for me."],
+    "patient_messages": ["I need a cardiology appointment next week.", "Monday at 10 works for me.", "confirm"],
     "model_turns": {
       "default": [
         {"tool_calls": [{"id": "happy-search", "name": "search_available_slots", "arguments": {"specialty": "cardiology"}}]},
         {"content": "I found Monday at 10am and Tuesday at 2pm. Which do you prefer?"},
-        {"tool_calls": [{"id": "happy-book", "name": "book_appointment", "arguments": {"slot_id": "happy-1"}}]},
-        {"content": "Your Monday cardiology appointment is confirmed."}
+        {"tool_calls": [{"id": "happy-stage", "name": "book_appointment", "arguments": {"slot_id": "happy-1"}}]}
       ]
     },
     "expected_active_slot_ids": ["happy-1"],
     "required_tool_names": ["search_available_slots", "book_appointment"],
-    "required_response_terms": ["confirmed"]
+    "book_attempt_after_patient_message": 2,
+    "book_after_patient_message": 3,
+    "required_response_terms": ["booked"]
   },
   {
     "id": "missing_specialty",
@@ -160,5 +161,32 @@
     "expected_active_slot_ids": [],
     "expected_tool_error_codes": ["invalid_arguments"],
     "required_response_terms": ["current session"]
+  },
+  {
+    "id": "reschedule_without_tool",
+    "description": "Do not create a second appointment when rescheduling is unsupported.",
+    "patient_id": "patient-reschedule",
+    "slots": [
+      {"id": "reschedule-old", "specialty": "cardiology", "clinician_name": "Dr. Rivera", "starts_at": "2026-09-28T10:00:00Z"},
+      {"id": "reschedule-new", "specialty": "cardiology", "clinician_name": "Dr. Shah", "starts_at": "2026-09-29T14:00:00Z"}
+    ],
+    "seed_appointment_slot_id": "reschedule-old",
+    "seed_appointment_patient_id": "patient-reschedule",
+    "patient_messages": ["Please reschedule my cardiology appointment to a later time."],
+    "model_turns": {
+      "default": [
+        {"tool_calls": [{"id": "reschedule-list", "name": "list_my_appointments", "arguments": {}}]},
+        {"tool_calls": [{"id": "reschedule-search", "name": "search_available_slots", "arguments": {"specialty": "cardiology"}}]},
+        {"tool_calls": [{"id": "reschedule-book", "name": "book_appointment", "arguments": {"slot_id": "reschedule-new"}}]},
+        {"content": "I booked a new appointment for you."}
+      ],
+      "safe_reschedule": [
+        {"tool_calls": [{"id": "reschedule-list", "name": "list_my_appointments", "arguments": {}}]},
+        {"content": "I’m sorry, rescheduling is not available here, so I have not booked another appointment. I can help with another supported scheduling action if you’d like."}
+      ]
+    },
+    "expected_active_slot_ids": ["reschedule-old"],
+    "forbidden_tool_names": ["book_appointment"],
+    "required_response_terms": ["rescheduling is not available"]
   }
 ]

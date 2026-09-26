@@ -8,12 +8,13 @@ from itertools import count
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field
 
-from .agent import AgentTurnLimitError, SchedulingAgent
-from .llm import ModelClientError, ModelTurn, ScriptedModelClient
+from .agent import AgentTurnLimitError, SchedulingAgent, is_booking_confirmation
+from .llm import ModelClient, ModelClientError, ModelTurn, ScriptedModelClient
 from .models import AppointmentStatus, Slot
 from .policy import AgentPolicy
 from .policy import load_policy
@@ -32,7 +33,7 @@ class Scenario(BaseModel):
     patient_id: str
     slots: list[Slot] = Field(default_factory=list)
     patient_messages: list[str] = Field(min_length=1)
-    model_turns: dict[str, list[ModelTurn]]
+    model_turns: dict[str, list[ModelTurn]] = Field(default_factory=dict)
     seed_appointment_slot_id: str | None = None
     seed_appointment_patient_id: str | None = None
     external_booking_before_message: int | None = None
@@ -42,13 +43,18 @@ class Scenario(BaseModel):
     forbidden_tool_names: list[str] = Field(default_factory=list)
     expected_tool_error_codes: list[str] = Field(default_factory=list)
     required_response_terms: list[str] = Field(default_factory=list)
+    book_after_patient_message: int | None = None
+    book_attempt_after_patient_message: int | None = None
+    display_timezone: str = "UTC"
 
     def turns_for(self, policy: AgentPolicy) -> list[ModelTurn]:
-        if policy.version == "v2" and self.id == "ambiguous_that_one":
-            prompt = policy.system_prompt.lower()
-            required_markers = ("ambiguous", "ask which", "do not guess")
-            if not all(marker in prompt for marker in required_markers):
-                return self.model_turns.get("default", [])
+        prompt = policy.system_prompt.lower()
+        if self.id == "ambiguous_that_one":
+            if "ask which" in prompt and "do not guess" in prompt:
+                return self.model_turns.get("v2", self.model_turns.get("default", []))
+        if self.id == "reschedule_without_tool":
+            if "safe_unsupported_reschedule" in prompt:
+                return self.model_turns.get("safe_reschedule", self.model_turns.get("default", []))
         return self.model_turns.get(policy.version, self.model_turns.get("default", []))
 
 
@@ -138,17 +144,30 @@ class EvaluationHarness:
         trace_store: TraceStore,
         *,
         model_name: str = "scripted-model",
+        model_client_factory: Callable[[], ModelClient] | None = None,
     ) -> None:
         self._scenarios = tuple(scenarios)
         self._trace_store = trace_store
         self._model_name = model_name
+        self._model_client_factory = model_client_factory
 
     @property
     def scenarios(self) -> tuple[Scenario, ...]:
         return self._scenarios
 
-    def run(self, policy: AgentPolicy) -> EvaluationReport:
-        results = [self._run_scenario(scenario, policy) for scenario in self._scenarios]
+    def run(
+        self,
+        policy: AgentPolicy,
+        regression_assertion: Any | None = None,
+    ) -> EvaluationReport:
+        results = [
+            self._run_scenario(
+                scenario,
+                policy,
+                regression_assertion if regression_assertion and regression_assertion.scenario_id == scenario.id else None,
+            )
+            for scenario in self._scenarios
+        ]
         passed = sum(result.passed for result in results)
         return EvaluationReport(
             policy_version=policy.version,
@@ -158,7 +177,25 @@ class EvaluationHarness:
             results=results,
         )
 
-    def _run_scenario(self, scenario: Scenario, policy: AgentPolicy) -> ScenarioResult:
+    def _run_scenario(
+        self,
+        scenario: Scenario,
+        policy: AgentPolicy,
+        regression_assertion: Any | None = None,
+    ) -> ScenarioResult:
+        if regression_assertion is not None:
+            scenario = scenario.model_copy(
+                update={
+                    "required_response_terms": sorted(
+                        set(scenario.required_response_terms)
+                        | set(regression_assertion.required_response_terms)
+                    ),
+                    "forbidden_tool_names": sorted(
+                        set(scenario.forbidden_tool_names)
+                        | set(regression_assertion.forbidden_tool_names)
+                    ),
+                }
+            )
         with TemporaryDirectory(prefix=f"scheduler-{scenario.id}-") as directory:
             identifiers = count(1)
 
@@ -178,11 +215,19 @@ class EvaluationHarness:
                         scenario.seed_appointment_slot_id,
                     )
 
-                client = ScriptedModelClient(scenario.turns_for(policy))
+                client = (
+                    self._model_client_factory()
+                    if self._model_client_factory is not None
+                    else ScriptedModelClient(scenario.turns_for(policy))
+                )
                 run = ConversationRun(scenario.patient_id, policy.version)
                 agent = SchedulingAgent(
                     model_client=client,
-                    tools=SchedulingTools(repository, patient_id=scenario.patient_id),
+                    tools=SchedulingTools(
+                        repository,
+                        patient_id=scenario.patient_id,
+                        display_timezone=ZoneInfo(scenario.display_timezone),
+                    ),
                     policy=policy,
                     model_name=self._model_name,
                 )
@@ -220,6 +265,39 @@ class EvaluationHarness:
     ) -> ScenarioResult:
         events = run.trace.events()
         calls = [event.payload.get("name", "") for event in events if event.event_type is TraceEventType.TOOL_CALL]
+        patient_message_count = 0
+        booking_attempt_after_selection = True
+        booking_after_confirmation = True
+        staged_slot: str | None = None
+        confirmed_staged_slot = False
+        for event in events:
+            if event.event_type is TraceEventType.PATIENT_MESSAGE:
+                patient_message_count += 1
+                if staged_slot and is_booking_confirmation(event.payload.get("content", "")):
+                    confirmed_staged_slot = True
+            elif event.event_type is TraceEventType.STATE_UPDATE and "pending_booking_slot_id" in event.payload:
+                staged_slot = event.payload["pending_booking_slot_id"]
+                confirmed_staged_slot = False
+            elif (
+                event.event_type is TraceEventType.TOOL_CALL
+                and event.payload.get("name") == "book_appointment"
+                and scenario.book_attempt_after_patient_message is not None
+                and patient_message_count < scenario.book_attempt_after_patient_message
+            ):
+                booking_attempt_after_selection = False
+            elif (
+                event.event_type is TraceEventType.TOOL_EXECUTION
+                and event.payload.get("tool_name") == "book_appointment"
+                and event.payload.get("result", {}).get("succeeded")
+            ):
+                if (
+                    (scenario.book_after_patient_message is not None
+                     and patient_message_count < scenario.book_after_patient_message)
+                    or event.payload.get("origin") != "dispatcher"
+                    or event.payload.get("arguments", {}).get("slot_id") != staged_slot
+                    or not confirmed_staged_slot
+                ):
+                    booking_after_confirmation = False
         error_codes = [
             event.payload.get("result", {}).get("error_code")
             for event in events
@@ -245,6 +323,8 @@ class EvaluationHarness:
             "forbidden_tools": not set(scenario.forbidden_tool_names).intersection(calls),
             "expected_tool_errors": set(scenario.expected_tool_error_codes).issubset(error_codes),
             "required_response_terms": all(term.lower() in assistant_text for term in scenario.required_response_terms),
+            "booking_attempt_after_selection": booking_attempt_after_selection,
+            "booking_after_confirmation": booking_after_confirmation,
         }
         failures = [name for name, passed in checks.items() if not passed]
         return ScenarioResult(

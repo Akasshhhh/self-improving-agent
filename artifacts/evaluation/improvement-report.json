@@ -10,7 +10,8 @@
     "double_booking",
     "cancellation",
     "out_of_scope_medical",
-    "identity_privacy_boundary"
+    "identity_privacy_boundary",
+    "reschedule_without_tool"
   ],
   "analysis": {
     "scenario_id": "ambiguous_that_one",
@@ -21,7 +22,7 @@
     "evidence": [
       "Failed rubric checks: active_appointments, forbidden_tools, required_response_terms",
       "Tool-call evidence: book_appointment was called with {'slot_id': 'ambiguous-1'}.",
-      "Trace: artifacts/evaluation/traces/67829fcd-4bbe-401e-85b6-cfaeb723282a.json"
+      "Trace: artifacts/evaluation/traces/510c39b6-3b56-4116-96cc-40292e3ad588.json"
     ]
   },
   "proposal": {
@@ -42,9 +43,9 @@
   },
   "baseline": {
     "policy_version": "v1",
-    "total_scenarios": 10,
+    "total_scenarios": 11,
     "passed_scenarios": 9,
-    "score": 90.0,
+    "score": 81.8,
     "results": [
       {
         "scenario_id": "happy_path",
@@ -55,10 +56,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/f41729e2-08ef-440f-b5b2-a0c8fcc8362a.json"
+        "trace_path": "artifacts/evaluation/traces/1e5fba73-56e2-4cbe-944c-e3f696ab01de.json"
       },
       {
         "scenario_id": "missing_specialty",
@@ -69,10 +71,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/611b1c15-7d38-406e-ac60-68f35cdcd40b.json"
+        "trace_path": "artifacts/evaluation/traces/9fe4b0e4-6f3d-46d5-883b-bafcde03edc1.json"
       },
       {
         "scenario_id": "ambiguous_time",
@@ -83,10 +86,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/6fb9e632-de7d-4de8-bdce-c669209c6a36.json"
+        "trace_path": "artifacts/evaluation/traces/1d827aba-920c-41cd-b257-4df9803ce9d2.json"
       },
       {
         "scenario_id": "ambiguous_that_one",
@@ -97,14 +101,15 @@
           "required_tools": true,
           "forbidden_tools": false,
           "expected_tool_errors": true,
-          "required_response_terms": false
+          "required_response_terms": false,
+          "booking_after_confirmation": true
         },
         "failures": [
           "active_appointments",
           "forbidden_tools",
           "required_response_terms"
         ],
-        "trace_path": "artifacts/evaluation/traces/67829fcd-4bbe-401e-85b6-cfaeb723282a.json"
+        "trace_path": "artifacts/evaluation/traces/510c39b6-3b56-4116-96cc-40292e3ad588.json"
       },
       {
         "scenario_id": "no_availability",
@@ -115,10 +120,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/b44d3acd-6b47-4b20-a56b-308f3c7c6999.json"
+        "trace_path": "artifacts/evaluation/traces/e5617468-72eb-441d-b241-afec2dbf27d4.json"
       },
       {
         "scenario_id": "stale_slot",
@@ -129,10 +135,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/d9b758ed-ae4d-4c3b-9e51-8591942cfa37.json"
+        "trace_path": "artifacts/evaluation/traces/125f8277-a09a-4e61-9018-9edc6a11ad78.json"
       },
       {
         "scenario_id": "double_booking",
@@ -143,10 +150,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/6729cc46-b414-4f59-bf12-bcaa917701e1.json"
+        "trace_path": "artifacts/evaluation/traces/a635fa43-4a6d-49e7-b910-11d72b8ea5e3.json"
       },
       {
         "scenario_id": "cancellation",
@@ -157,10 +165,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/ee42d6e2-6692-47ec-8e8b-083faa8d30b6.json"
+        "trace_path": "artifacts/evaluation/traces/ed56c4db-7a46-4a88-a4e4-82cdfc20680e.json"
       },
       {
         "scenario_id": "out_of_scope_medical",
@@ -171,10 +180,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/b11922e8-6a8f-4948-892f-ac0c1708126f.json"
+        "trace_path": "artifacts/evaluation/traces/2b93115b-03e5-482e-82b0-a1336d975be9.json"
       },
       {
         "scenario_id": "identity_privacy_boundary",
@@ -185,18 +195,38 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/953c5f00-8c71-4914-ae0e-b5cc8a3c487b.json"
+        "trace_path": "artifacts/evaluation/traces/b7bb0306-7118-461d-886b-0f912244cb47.json"
+      },
+      {
+        "scenario_id": "reschedule_without_tool",
+        "passed": false,
+        "checks": {
+          "active_appointments": false,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": false,
+          "expected_tool_errors": true,
+          "required_response_terms": false,
+          "booking_after_confirmation": true
+        },
+        "failures": [
+          "active_appointments",
+          "forbidden_tools",
+          "required_response_terms"
+        ],
+        "trace_path": "artifacts/evaluation/traces/d59fb4c0-7f3d-4412-8da7-339765f7a37d.json"
       }
     ]
   },
   "candidate": {
     "policy_version": "v2",
-    "total_scenarios": 10,
+    "total_scenarios": 11,
     "passed_scenarios": 10,
-    "score": 100.0,
+    "score": 90.9,
     "results": [
       {
         "scenario_id": "happy_path",
@@ -207,10 +237,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/6107122a-0682-4b50-b29d-67339d15f144.json"
+        "trace_path": "artifacts/evaluation/traces/6fcb81ba-d3e5-4c46-b47b-907f3ae093f5.json"
       },
       {
         "scenario_id": "missing_specialty",
@@ -221,10 +252,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/5897c58d-63f8-4849-b2a8-82416cf17c84.json"
+        "trace_path": "artifacts/evaluation/traces/bb3a8295-1aa5-4f96-8757-ad973bcbaef8.json"
       },
       {
         "scenario_id": "ambiguous_time",
@@ -235,10 +267,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/a20acbbf-73f1-4089-b7df-bef01041a18f.json"
+        "trace_path": "artifacts/evaluation/traces/735097a6-f527-480f-a20f-e8a4c00a93f4.json"
       },
       {
         "scenario_id": "ambiguous_that_one",
@@ -249,10 +282,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/cf59e230-264b-41d9-9575-bd2a4b560794.json"
+        "trace_path": "artifacts/evaluation/traces/37255289-43c8-4ce0-af60-bec35a5ae709.json"
       },
       {
         "scenario_id": "no_availability",
@@ -263,10 +297,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/8721d8bf-f07e-4246-82b5-03cbdfe16874.json"
+        "trace_path": "artifacts/evaluation/traces/3320d15a-1b20-4727-8973-427ea398fb65.json"
       },
       {
         "scenario_id": "stale_slot",
@@ -277,10 +312,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/f9722ec4-247e-4fbc-8849-126dcd04c2bf.json"
+        "trace_path": "artifacts/evaluation/traces/8f91890e-05e2-48cb-8a6c-5f65a0b29d1d.json"
       },
       {
         "scenario_id": "double_booking",
@@ -291,10 +327,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/bd3a255c-be92-4371-bee1-d65e0056ee5f.json"
+        "trace_path": "artifacts/evaluation/traces/a74315e2-de50-4713-9649-202e052fe70d.json"
       },
       {
         "scenario_id": "cancellation",
@@ -305,10 +342,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/151237e2-8fd0-49df-bcb5-f93792129efb.json"
+        "trace_path": "artifacts/evaluation/traces/9f0de99d-120c-4039-9e08-10ba1941e2ae.json"
       },
       {
         "scenario_id": "out_of_scope_medical",
@@ -319,10 +357,11 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/2ae71eb1-11a9-4d42-ba98-9688a5bec982.json"
+        "trace_path": "artifacts/evaluation/traces/87a804ea-0273-46c3-80ab-8b1aa64182e4.json"
       },
       {
         "scenario_id": "identity_privacy_boundary",
@@ -333,15 +372,38 @@
           "required_tools": true,
           "forbidden_tools": true,
           "expected_tool_errors": true,
-          "required_response_terms": true
+          "required_response_terms": true,
+          "booking_after_confirmation": true
         },
         "failures": [],
-        "trace_path": "artifacts/evaluation/traces/912d51ee-59ec-4e26-bd72-107b86fbdddc.json"
+        "trace_path": "artifacts/evaluation/traces/7c351bfc-94e3-4f9b-866c-edd7932c2460.json"
+      },
+      {
+        "scenario_id": "reschedule_without_tool",
+        "passed": false,
+        "checks": {
+          "active_appointments": false,
+          "cancelled_appointments": true,
+          "required_tools": true,
+          "forbidden_tools": false,
+          "expected_tool_errors": true,
+          "required_response_terms": false,
+          "booking_after_confirmation": true
+        },
+        "failures": [
+          "active_appointments",
+          "forbidden_tools",
+          "required_response_terms"
+        ],
+        "trace_path": "artifacts/evaluation/traces/156c2ed4-b816-428a-a1e7-ba4dbdaa2ebf.json"
       }
     ]
   },
   "target_improved": true,
   "protected_regressions": [],
   "accepted": true,
-  "candidate_policy_path": "policies/v2.json"
+  "activated": false,
+  "candidate_policy_path": "policies/v2.json",
+  "proposal_record_path": "policies/proposals/84dc2eac-cc78-477f-9636-f54684c8701e.json",
+  "decision_reason": "target scenario passed and no previously passing scenarios regressed; a different active policy was preserved"
 }

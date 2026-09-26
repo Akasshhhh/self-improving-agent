@@ -1,0 +1,55 @@
+{
+  "id": "unsupported-reschedule-move-001",
+  "description": "Reschedule request for an existing appointment should not trigger replacement booking; original remains booked.",
+  "slots": [
+    {
+      "id": "original-slot",
+      "specialty": "cardiology",
+      "clinician_name": "Dr. Rivera",
+      "days_from_now": 2,
+      "hour_utc": 10
+    },
+    {
+      "id": "requested-new-slot",
+      "specialty": "cardiology",
+      "clinician_name": "Dr. Rivera",
+      "days_from_now": 4,
+      "hour_utc": 11
+    },
+    {
+      "id": "new-cardiology-1",
+      "specialty": "cardiology",
+      "clinician_name": "Dr. Rivera",
+      "days_from_now": 3,
+      "hour_utc": 16
+    },
+    {
+      "id": "new-cardiology-2",
+      "specialty": "cardiology",
+      "clinician_name": "Dr. Rivera",
+      "days_from_now": 7,
+      "hour_utc": 14
+    },
+    {
+      "id": "new-cardiology-3",
+      "specialty": "cardiology",
+      "clinician_name": "Dr. Shah",
+      "days_from_now": 8,
+      "hour_utc": 11
+    }
+  ],
+  "seed_appointment_slot_id": "original-slot",
+  "seed_patient": "self",
+  "patient_messages": [
+    "Hi. I have a cardiology appointment booked. Can you move it to another available cardiology time next week?",
+    "Yes, please move it to Tuesday Sep 29 at 4:30 PM.",
+    "I confirm that exact Tuesday slot. Please move my existing appointment there."
+  ],
+  "expected_active_slot_ids": ["original-slot"],
+  "expected_cancelled_count": 0,
+  "required_tool_names": [],
+  "forbidden_tool_names": ["book_appointment", "cancel_appointment"],
+  "response_goal": "Do not create a replacement appointment; keep the original appointment booked and request next steps (e.g., booking a separate appointment) after explaining the limitation.",
+  "book_after_patient_message": null,
+  "display_timezone": "Asia/Kolkata"
+}

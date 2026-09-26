@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .evaluation import EvaluationHarness, EvaluationReport, Scenario, ScenarioResult
 from .llm import ChatMessage, ModelClient
-from .policy import AgentPolicy, save_policy
+from .policy import AgentPolicy, activate_policy, load_active_policy, load_policy, save_policy
 
 
 class FailureAnalysis(BaseModel):
@@ -28,7 +28,7 @@ class RegressionAssertion(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     scenario_id: str
-    required_response_terms: list[str] = Field(min_length=1)
+    required_response_terms: list[str] = Field(default_factory=list)
     forbidden_tool_names: list[str] = Field(default_factory=list)
 
 
@@ -166,11 +166,21 @@ class ImprovementLoop:
         candidate_passed = {result.scenario_id for result in candidate.results if result.passed}
         regressions = sorted(baseline_passed - candidate_passed)
         accepted = candidate_target.passed and not regressions
+        activated = False
         if accepted:
-            save_policy(candidate_policy, self._candidate_policy_path)
+            if self._candidate_policy_path.exists() and load_policy(self._candidate_policy_path) != candidate_policy:
+                raise ValueError("Refusing to overwrite an existing immutable candidate policy version.")
+            if not self._candidate_policy_path.exists():
+                save_policy(candidate_policy, self._candidate_policy_path)
+            active_policy = load_active_policy(self._candidate_policy_path.parent)
+            if active_policy.version in {self._baseline_policy.version, candidate_policy.version}:
+                activate_policy(candidate_policy, self._candidate_policy_path.parent)
+                activated = True
 
         if accepted:
             decision_reason = "target scenario passed and no previously passing scenarios regressed"
+            if not activated:
+                decision_reason += "; a different active policy was preserved"
         elif not candidate_target.passed and regressions:
             decision_reason = "target scenario failed and protected scenarios regressed"
         elif not candidate_target.passed:
@@ -199,6 +209,7 @@ class ImprovementLoop:
             "target_improved": candidate_target.passed,
             "protected_regressions": regressions,
             "accepted": accepted,
+            "activated": activated,
             "candidate_policy_path": str(self._candidate_policy_path) if accepted else None,
             "proposal_record_path": str(proposal_record_path),
             "decision_reason": decision_reason,
