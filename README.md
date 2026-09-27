@@ -1,5 +1,7 @@
 # Clinic Scheduling Agent
 
+This repository contains a patient-appointment scheduling agent for a clinic. A language model holds the conversation and requests scoped tools; deterministic Python code validates those requests and owns SQLite appointment changes. Completed runs produce traces that can be evaluated, turned into bounded improvement proposals, and promoted only after regression checks pass.
+
 ## TL;DR
 
 - Live conversation: `.venv/bin/scheduler-agent --timezone Asia/Kolkata`.
@@ -14,7 +16,16 @@
 - **Evaluation:** 11 offline scenarios and four live protected cases cover normal paths and failure modes; database state and ordered traces decide objective outcomes.
 - **Self-improvement:** a trace failure becomes a structured policy proposal and regression scenario, then an admin gate compares the old and candidate policies without weakening protected behavior.
 
-## Setup and one-command usage
+## Architecture
+
+```text
+Patient ↔ agent/model → tool dispatcher → SQLite
+                          └→ trace → evaluation → proposal → admin gate → active policy
+```
+
+The model chooses actions and writes patient-facing text. The dispatcher and repository validate identity, permissions, availability, and booking side effects. SQLite is authoritative for appointments; the trace is evidence for debugging and evaluation.
+
+## Setup and commands
 
 Python 3.12+; run from the repository root:
 
@@ -24,7 +35,40 @@ python3 -m venv .venv
 cp .env.example .env
 ```
 
-Set `OPENAI_API_KEY` and `OPENAI_MODEL` in `.env` for live use, and `SCHEDULER_ADMIN_PASSWORD` for review. Offline eval needs no key. A fresh clone loads v1. For an isolated run, create a workspace with `.venv/bin/scheduler-demo artifacts/demo-001` and pass `--workspace artifacts/demo-001` to the agent and admin CLIs.
+For live chat and admin review, set `OPENAI_API_KEY`, `OPENAI_MODEL`, and `SCHEDULER_ADMIN_PASSWORD` in `.env`. Offline evaluation needs no API key.
+
+Run the repeatable offline improvement demo:
+
+```bash
+.venv/bin/scheduler-eval
+```
+
+Create a fresh isolated workspace for a live demo. The directory must not already exist:
+
+```bash
+.venv/bin/scheduler-demo artifacts/demo-001
+.venv/bin/scheduler-agent \
+  --workspace artifacts/demo-001 \
+  --timezone Asia/Kolkata
+```
+
+After the chat ends with `exit`, review its proposals with the admin CLI:
+
+```bash
+.venv/bin/scheduler-admin \
+  --workspace artifacts/demo-001 \
+  list
+
+.venv/bin/scheduler-admin \
+  --workspace artifacts/demo-001 \
+  show PROPOSAL_ID
+
+.venv/bin/scheduler-admin \
+  --workspace artifacts/demo-001 \
+  accept PROPOSAL_ID
+```
+
+Replace `PROPOSAL_ID` with the ID printed by `list`. The admin commands ask for `SCHEDULER_ADMIN_PASSWORD`. If the policy gate promotes a proposal, start the agent again with the same workspace; it loads the new active policy.
 
 ## Tools exposed
 
@@ -59,9 +103,9 @@ The unsupported-reschedule goal uses a deterministic response check. A transcrip
 
 ## Improvement loop
 
-On `exit`, the trace saves messages, tool arguments/results, starting and final state, and policy version. A deterministic reviewer detects reschedule-as-booking; a narrow model reviewer handles other evidenced failures. Generated proposals support `unsupported_reschedule` and `ambiguous_reference`: a schema-validated policy rule plus a synthetic scenario. Invalid proposals retain a reason; duplicate pending proposals are deduplicated.
+On `exit`, the trace saves the conversation, tool arguments/results, starting and final state, and policy version. A deterministic reviewer finds clear failures; a narrow model reviewer handles failures that need intent understanding. A supported failure produces a policy rule and a generated regression scenario for admin review.
 
-Use `.venv/bin/scheduler-admin --workspace artifacts/demo-001 list`, `show <id>`, then `accept <id>`. Before comparison, the generated target is frozen alongside the protected scenarios. Baseline and candidate are then replayed against that **exact same frozen scenario set**, with the same resolved dates, twice per policy in fresh databases. It requires the baseline to reproduce the failure, the candidate to pass, and no regression of previously passing cases. Only then does it save the policy/scenario and update `active.json`.
+The gate freezes that generated target together with the protected scenarios. Baseline and candidate run against the **exact same frozen set**, with the same resolved dates, twice per policy in fresh databases. The baseline must reproduce the failure, the candidate must pass, and protected cases must not regress. Only then is the new policy activated. The lower-level proposal and workspace behavior is documented in [DESIGN.md](DESIGN.md).
 
 The [offline report](artifacts/evaluation/improvement-report.json) shows scripted mechanics: **9/11 → 10/11** for ambiguous reference. The separate [live rehearsal](reports/live-rehearsal.md) shows an admin-reviewed real-model reschedule fix: **4/5 → 5/5** twice. Neither regressed protected passes. The live workspace's v2 differs from tracked offline `policies/v2.json`.
 
