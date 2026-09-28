@@ -11,7 +11,7 @@ from scheduler.improvement import (
     ModelImprovementProposer,
 )
 from scheduler.llm import ModelToolCall, ModelTurn, ScriptedModelClient
-from scheduler.policy import activate_policy, load_active_policy, load_policy, save_policy
+from scheduler.policy import AgentPolicy, activate_policy, load_active_policy, load_policy, save_policy
 from scheduler.trace_store import TraceStore
 from scheduler.state import ConversationRun
 from scheduler.tracing import TraceEventType
@@ -180,7 +180,11 @@ class EvaluationAndImprovementTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             output = Path(directory)
             save_policy(load_policy(ROOT / "policies" / "v1.json"), output / "v1.json")
-            activate_policy(load_policy(ROOT / "policies" / "v3.json"), output)
+            newer_policy = AgentPolicy(
+                version="v9",
+                system_prompt="A newer active policy used only to test promotion safety.",
+            )
+            activate_policy(newer_policy, output)
             loop = ImprovementLoop(
                 harness=EvaluationHarness(scenarios, TraceStore(output / "traces")),
                 baseline_policy=load_policy(output / "v1.json"),
@@ -193,7 +197,7 @@ class EvaluationAndImprovementTests(unittest.TestCase):
 
             self.assertTrue(report["accepted"])
             self.assertFalse(report["activated"])
-            self.assertEqual(load_active_policy(output).version, "v3")
+            self.assertEqual(load_active_policy(output).version, "v9")
             baseline_target = next(
                 result
                 for result in report["baseline"]["results"]
